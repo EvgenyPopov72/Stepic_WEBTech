@@ -16,6 +16,10 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 
+handler404 = 'qa.views.pageNotFound404'
+handler500 = 'qa.views.serverError500'
+handler400 = 'qa.views.badRequest400'
+
 urlpatterns = [
     # url(r'^admin/', admin.site.urls),
     url(r'', include("qa.urls")),
