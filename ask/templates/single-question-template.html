@@ -15,7 +15,11 @@
         <div class="panel-body">
             <ul>
                 {% for answer in answers %}
-                    <li>{{ answer.id }}</li>
+                    <li>
+                        {{ answer.id }}
+                        <div>{{ answer.text }}</div>
+                        <div>{{ answer.author }}</div>
+                    </li>
                 {% endfor %}
             </ul>
         </div>
