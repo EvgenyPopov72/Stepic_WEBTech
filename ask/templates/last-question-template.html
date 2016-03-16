@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block isLastQuestActive %}class="active"{% endblock %}
+
+{% block main %}
+    <ul class="list-questions">
+        {% for question in questions %}
+            <li class="single-question">
+                <a href="{% url 'single-question-view' %}{{ question.id }}/">
+                    {{ question.title|truncatewords:10 }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <nav>
+        <ul class="pagination">
+            {% for p in paginator.page_range %}
+                {% if p == page.number %}
+                    <li class="active">
+                        {% else %}
+                    <li>
+                {% endif %}
+                        <a href="{{ paginator.baseurl }}{{ p }}">{{ p }}</a>
+                    </li>
+            {% endfor %}
+        </ul>
+    </nav>
+{% endblock %}
