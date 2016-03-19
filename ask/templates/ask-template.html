@@ -1,41 +1,20 @@
 {% extends 'base.html' %}
 
 {% block main %}
-    <div class="single-question">
+    <div class="ask-question">
         <div class="page-header">
-            <h1 class="title-question">{{ question.title }}</h1>
+            <h1 class="title-question">New question:</h1>
         </div>
-        <div class="text-question">{{ question.text }}</div>
-
-        {% if answers %}
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Answers:</h3>
-                </div>
-                <div class="panel-body">
-                    <ul>
-                        {% for answer in answers %}
-                            <li>
-                                <div>Text: {{ answer.text }}</div>
-                                <div>Author: {{ answer.author }}</div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        {% endif %}
-
         {% for e in form.non_field_errors %}
             <div class="alert alert-danger">{{ e }}</div>
         {% endfor %}
-        <form class="form-horizontal" method="post" action="{% url 'answer-view' %}">
+        <form class="form-horizontal" method="post" action="{% url 'ask-view' %}">
             <fieldset>
                 {% csrf_token %}
                 {% for field in form %}
                     <div class="form-group {% if field.errors %}has-error has-feedback{% endif %}">
                         <label class="col-sm-1 control-label"
                                for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {#                        <div class="col-sm-10">{{ field }}</div>#}
                         <div class="col-sm-11">
                             {{ field }}
                             {% if field.errors %}
@@ -44,20 +23,16 @@
                                 <span id="inputError2Status" class="sr-only">(error)</span>
                             {% endif %}
                         </div>
-
                     </div>
                 {% endfor %}
             </fieldset>
             <div class="form-actions">
                 <div class="form-group">
                     <div class="col-sm-offset-1 col-sm-11">
-                        <button type="submit" class="btn btn-primary col-sm-2">Answer</button>
+                        <button type="submit" class="btn btn-primary col-sm-2">Ask</button>
                     </div>
                 </div>
             </div>
         </form>
-
-
     </div>
-
 {% endblock %}
