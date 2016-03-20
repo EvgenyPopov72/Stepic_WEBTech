@@ -1,5 +1,6 @@
 # coding=utf-8
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, render_to_response
@@ -7,7 +8,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.core.paginator import Paginator
 from django.views.defaults import bad_request
 
-from qa.forms import AskForm, AnswerForm
+from qa.forms import AskForm, AnswerForm, LoginForm, SignupForm
 from qa.models import Question, Answer
 
 
@@ -63,12 +64,14 @@ def lastQuestions(request, *args, **kwargs):
 
 
 def singleQuestion(request, qa_id):
+    current_user_id = None
     if qa_id == -1:
         qa_id = request.POST.get('question', -1)
         if qa_id == -1:
             # raise badRequest400()
             return HttpResponseRedirect('/')
-    current_user_id = 1
+    if request.user.is_authenticated():
+        current_user_id = request.user.id
     question = get_object_or_404(Question, id=qa_id)
     answers = Answer.objects.all().filter(question=question.id)
 
@@ -86,16 +89,55 @@ def singleQuestion(request, qa_id):
 
 
 def loginView(request, *args, **kwargs):
-    return HttpResponse('loginView')
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = request.POST['username']
+            password = request.POST['password']
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    return HttpResponseRedirect('/')
+                form = LoginForm()
+                form.non_field_errors = ['Пользователь заблокирован']
+            else:
+                form = LoginForm()
+                form.non_field_errors = ['Неверные учетные данные']
+    else:
+        form = LoginForm()
+
+    return render(request, 'login-signup-template.html', {'form': form, 'title': 'Login', 'signup': False})
 
 
-def registerView(request, *args, **kwargs):
-    return HttpResponse('registerView')
+def logoutView(request, *args, **kwargs):
+    logout(request)
+    return HttpResponseRedirect("/")
+
+
+def signupView(request, *args, **kwargs):
+    if request.method == 'POST':
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            username = request.POST['username']
+            password = request.POST['password']
+            email = request.POST['email']
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+            return HttpResponseRedirect('/')
+    else:
+        form = SignupForm()
+
+    return render(request, 'login-signup-template.html', {'form': form, 'title': 'Signup', 'signup': True})
 
 
 def askView(request, *args, **kwargs):
-    # current_user = User.objects.filter(id=1).get()  # для простоты текущий юзер - первый юзер из базы
-    current_user_id = 1
+    current_user_id = None
+    if request.user.is_authenticated():
+        current_user_id = request.user.id
     if request.method == "POST":
         form = AskForm(request.POST, current_user_id=current_user_id)
         if form.is_valid():

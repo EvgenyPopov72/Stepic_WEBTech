@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block main %}
+    <div class="ask-question">
+        <div class="page-header">
+            <h1 class="title-question">{{ title|capfirst }}:</h1>
+        </div>
+        {% for e in form.non_field_errors %}
+            <div class="alert alert-danger">{{ e }}</div>
+        {% endfor %}
+        {% if incorrect_user %}<div class="alert alert-danger">{{ incorrect_user }}</div>{% endif %}
+        <form class="form-horizontal" method="post" action="{% if signup %}{% url 'signup-view' %}{% else %}{% url 'login-view' %}{% endif %}">
+            <fieldset>
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="form-group {% if field.errors %}has-error has-feedback{% endif %}">
+                        <label class="col-sm-1 control-label"
+                               for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        <div class="col-sm-11">
+                            {{ field }}
+                            {% if field.errors %}
+                                <span class="glyphicon glyphicon-remove form-control-feedback"
+                                      aria-hidden="true"></span>
+                                <span id="inputError2Status" class="sr-only">(error)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </fieldset>
+            <div class="form-actions">
+                <div class="form-group">
+                    <div class="col-sm-offset-1 col-sm-11">
+                        <button type="submit" class="btn btn-primary col-sm-2">{{ title|capfirst }}</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

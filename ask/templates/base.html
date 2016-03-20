@@ -29,7 +29,9 @@
             {% block main %}{% endblock %}
         </div>
         <div class="col-md-3 pull-right bg-success">
-            {% block sidebar %}Sidebar{% endblock %}
+            {% block sidebar %}Sidebar
+                <div class="user">{{ request.user }}</div>
+            {% endblock %}
         </div>
     </div>
 </div>
