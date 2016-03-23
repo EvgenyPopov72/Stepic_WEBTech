@@ -17,5 +17,6 @@ urlpatterns = [
     url(r'^ask/', views.askView, name='ask-view'),
     url(r'^popular/', views.popularQuestions, name='popular-question-view'),
     url(r'^new/', views.test),
+    url(r'^like/', views.ajaxRatingView, name='ajax-rating'),
     url(r'^$', views.lastQuestions, name='last-question-view'),
 ]

@@ -24,7 +24,7 @@
 <body>
 <div class="container">
     <div class="row">
-    {% include 'header-template.html' %}
+        {% include 'header-template.html' %}
         <div class="col-md-9 pull-left">
             {% block main %}{% endblock %}
         </div>
@@ -35,6 +35,9 @@
         </div>
     </div>
 </div>
+
+{% block scripts-bottom %}{% endblock %}
+
 </body>
 </html>
 

@@ -1,15 +1,47 @@
 # coding=utf-8
-from django.contrib.auth.models import User
+import json
+
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404, render_to_response
-from django.views.decorators.http import require_GET, require_POST
-from django.core.paginator import Paginator
-from django.views.defaults import bad_request
+from django.shortcuts import render, get_object_or_404, render_to_response, redirect
+from django.views.decorators.http import require_GET
 
 from qa.forms import AskForm, AnswerForm, LoginForm, SignupForm
 from qa.models import Question, Answer
+
+
+def login_required_ajax(view):
+    def view2(request, *args, **kwargs):
+        if request.user.is_authenticated():
+            return view(request, *args, **kwargs)
+        elif request.is_ajax():
+            return HttpResponseAjaxError(
+                code="no_auth",
+                message=u'Требуется авторизация',
+            )
+        else:
+            redirect('/login/?continue=' + request.get_full_path())
+
+    return view2
+
+
+class HttpResponseAjax(HttpResponse):
+    def __init__(self, status='ok', **kwargs):
+        kwargs['status'] = status
+        super(HttpResponseAjax, self).__init__(
+            content=json.dumps(kwargs),
+            content_type='application/json',
+        )
+
+
+class HttpResponseAjaxError(HttpResponseAjax):
+    def __init__(self, code, message):
+        super(HttpResponseAjaxError, self).__init__(
+            status='error', code=code, message=message
+        )
 
 
 def test(request, *args, **kwargs):
@@ -54,6 +86,7 @@ def lastQuestions(request, *args, **kwargs):
     if limit > 100:
         limit = 100
     questions = Question.objects.order_by('-id').all()[:]
+    # questions[0].answer_set.count()
     paginator = Paginator(questions, limit)
     paginator.baseurl = reverse('last-question-view') + '?page='
     page = paginator.page(page)  # Page
@@ -68,7 +101,6 @@ def singleQuestion(request, qa_id):
     if qa_id == -1:
         qa_id = request.POST.get('question', -1)
         if qa_id == -1:
-            # raise badRequest400()
             return HttpResponseRedirect('/')
     if request.user.is_authenticated():
         current_user_id = request.user.id
@@ -147,6 +179,25 @@ def askView(request, *args, **kwargs):
     else:
         form = AskForm(current_user_id=current_user_id)
     return render(request, 'ask-template.html', {'form': form})
+
+
+@login_required_ajax
+def ajaxRatingView(request, *args, **kwargs):
+    # if not request.user.is_authenticated():
+    #     print("bad_user")
+    #     return HttpResponseAjax(code="bad_user", message="anonimous detected")
+    qa_id = request.POST.get('qa_id')
+    rating_inc = request.POST.get('rating_inc')
+    question = get_object_or_404(Question, id=qa_id)
+    if question.likes.filter(id=request.user.id).all():
+        return HttpResponseAjaxError(code="already_voted", message="Пользователь уже проголосовал")
+    rating = question.rating
+    if rating_inc in {"1", "-1"}:
+        rating += int(rating_inc)
+        question.rating = rating
+        question.likes.add(request.user)
+        question.save()
+    return HttpResponseAjax(message="Ваш голос принят", qa_id=qa_id, rating=rating)
 
 
 def badRequest400(request):
